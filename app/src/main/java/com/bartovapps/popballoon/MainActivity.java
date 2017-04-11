@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+
 public class MainActivity extends AppCompatActivity implements Balloon.BalloonTouchListener {
 
     public static final int MIN_ANIMATION_DELAY = 500;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
     List<Balloon> mBalloons = new ArrayList<>();
 
     SoundHelper soundHelper;
+    GameThread mGameThread;
 
 
     @Override
@@ -86,9 +88,7 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
         mContentView = (ViewGroup) findViewById(R.id.mainActivity);
 
         playButton = (Button) findViewById(R.id.go_button);
-        playButton.setOnClickListener((v) -> {
-            startGame();
-        });
+        playButton.setOnClickListener((v) -> startGame());
 
         tvScore = (TextView) findViewById(R.id.score_display);
         tvLevel = (TextView) findViewById(R.id.level_display);
@@ -142,20 +142,23 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
         mPinsUsed = 0;
         mPlaying = true;
 
+
         for (ImageView pin : mPinsImages) {
             pin.setImageResource(R.drawable.pin);
         }
 
         playButton.setEnabled(false);
-        updateLevel();
 
-        BalloonLauncher launcher = new BalloonLauncher();
-        launcher.execute(mLevel);
+        mGameThread = new GameThread();
+        mGameThread.isPlaying = true;
+        updateLevel();
+        mGameThread.start();
         soundHelper.playMusic();
     }
 
     void updateLevel() {
         mLevel++;
+        mGameThread.setLevel(mLevel);
         updateDisplay();
     }
 
@@ -193,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
         Toast.makeText(this, "Game Over", Toast.LENGTH_LONG).show();
         soundHelper.pauseMusic();
         mPlaying = false;
+        mGameThread.stopGame();
         playButton.setEnabled(true);
         playButton.setText(getString(R.string.play_game));
 
@@ -230,40 +234,46 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
 
     }
 
-    private class BalloonLauncher extends AsyncTask<Integer, Integer, Void> {
+
+
+    private class GameThread extends Thread{
+
+        private boolean isPlaying = true;
+        private int mLevel = 1;
+
 
         @Override
-        protected Void doInBackground(Integer... params) {
-            if (params.length != 1) {
-                throw new AssertionError("Expected 1 param for this executor");
-            }
+        public void run() {
+            super.run();
 
-            int level = params[0];
-            int maxDelay = Math.max(MIN_ANIMATION_DELAY, MAX_ANIMATION_DELAY - ((level - 1) * 500));
-            int minDelay = maxDelay / 2;
-            while (mPlaying) {
-                Random random = new Random(new Date().getTime());
-                int xPos = random.nextInt(mScreenWidth - 200);
-                publishProgress(xPos);
+            while(isPlaying){
+                int maxDelay = Math.max(MIN_ANIMATION_DELAY, MAX_ANIMATION_DELAY - ((mLevel - 1) * 500));
+                int minDelay = maxDelay / 2;
+                while (mPlaying) {
+                    Random random = new Random(new Date().getTime());
+                    int xPos = random.nextInt(mScreenWidth - 200);
+                    runOnUiThread(() -> launchBalloon(xPos));
 
-                int delay = random.nextInt(minDelay) + minDelay;
+//                    launchBalloon(xPos);
+                    int delay = random.nextInt(minDelay) + minDelay;
 
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
                 }
-
             }
-            return null;
         }
 
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            int newPosition = values[0];
-            launchBalloon(newPosition);
+        void stopGame(){
+            isPlaying = false;
         }
 
+        private void setLevel(int level){
+            mLevel = level;
+        }
     }
 
     private void launchBalloon(int newPosition) {

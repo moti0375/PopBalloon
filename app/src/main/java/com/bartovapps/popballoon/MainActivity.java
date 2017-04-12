@@ -1,7 +1,6 @@
 package com.bartovapps.popballoon;
 
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
     int mLevel = 0;
     int mScore = 0;
     int mPinsUsed = 0;
-    int mHighScore;
     boolean mPlaying;
     int mPoppedBalloons = 0;
 
@@ -73,9 +71,9 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
 
         random = new Random();
 
-        mBalloonColors[0] = Color.rgb(255, 0, 0);
-        mBalloonColors[1] = Color.rgb(0, 255, 0);
-        mBalloonColors[2] = Color.rgb(0, 0, 255);
+        mBalloonColors[0] = Color.rgb(255, 0  ,0);
+        mBalloonColors[1] = Color.rgb(0  , 255,0);
+        mBalloonColors[2] = Color.rgb(0  , 0  ,255);
 
         setFullScreen();
         soundHelper = new SoundHelper(this);
@@ -99,6 +97,8 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
         mPinsImages.add((ImageView) findViewById(R.id.pin3));
         mPinsImages.add((ImageView) findViewById(R.id.pin4));
         mPinsImages.add((ImageView) findViewById(R.id.pin5));
+
+
 
         ViewTreeObserver viewTreeObserver = mContentView.getViewTreeObserver();
 
@@ -180,12 +180,14 @@ public class MainActivity extends AppCompatActivity implements Balloon.BalloonTo
 
 
         } else {
+            soundHelper.playMissedBalloon();
             if (mPinsUsed < NUMBER_OF_PINS) {
                 Toast.makeText(this, "Missed that one...", Toast.LENGTH_SHORT).show();
                 mPinsImages.get(mPinsUsed).setImageResource(R.drawable.pin_off);
                 mPinsUsed++;
             }
             if (mPinsUsed == NUMBER_OF_PINS) {
+                soundHelper.playGameOver();
                 gameOver(true);
             }
         }

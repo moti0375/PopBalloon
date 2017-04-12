@@ -11,23 +11,23 @@ import android.view.View;
 
 import com.bartovapps.popballoon.R;
 
-import java.util.jar.Attributes;
-
 /**
  * Created by motibartov on 11/04/2017.
  */
 
 public class SoundHelper {
 
-    SoundPool mSoundPool;
-    MediaPlayer mMusicPlayer;
-    MediaPlayer mPopSound;
-    Activity mActivity;
+    private SoundPool mSoundPool;
+    private MediaPlayer mMusicPlayer;
+    private MediaPlayer mPopSound;
+    private Activity mActivity;
 
-    boolean mLoaded;
-    float mVolume;
+    private boolean mLoaded;
+    private float mVolume;
 
-    int mSoundID;
+    private int poppedSoundId;
+    private int gameOverSoundId;
+    private int missedSoundId;
 
     public SoundHelper(Activity context) {
         mActivity = context;
@@ -62,11 +62,12 @@ public class SoundHelper {
             mSoundPool = new SoundPool(6, AudioManager.STREAM_MUSIC, 0);
         }
 
-        mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
-            mLoaded = true;
-        });
+        mSoundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> mLoaded = true);
 
-        mSoundID = mSoundPool.load(mActivity, R.raw.balloon_pop, 1);
+        poppedSoundId = mSoundPool.load(mActivity, R.raw.balloon_pop, 1);
+        gameOverSoundId = mSoundPool.load(mActivity, R.raw.game_over, 1);
+        missedSoundId = mSoundPool.load(mActivity, R.raw.missed_ballon, 1);
+
 
     }
 
@@ -84,7 +85,20 @@ public class SoundHelper {
 
     public void playPopSound(View view) {
         if(mLoaded){
-            mSoundPool.play(mSoundID, mVolume, mVolume, 1, 0, 1f);
+            mSoundPool.play(poppedSoundId, mVolume, mVolume, 1, 0, 1f);
+        }
+    }
+
+    public void playGameOver(){
+        if(mLoaded){
+            mSoundPool.play(gameOverSoundId, mVolume, mVolume, 1, 0, 1f);
+        }
+    }
+
+
+    public void playMissedBalloon(){
+        if(mLoaded){
+            mSoundPool.play(missedSoundId, mVolume, mVolume, 1, 0, 1f);
         }
     }
 }
